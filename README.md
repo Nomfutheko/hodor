@@ -58,9 +58,4 @@ Every folder has a executable .py file, to run it you only have to type:
   <li>Operating System: Ubuntu 19</li>
   <li>Pep8</li>
   </ul>
-<hr>
-<h3>
-  Author
-</h3>
-<p>Edgar Quintero <a href="https://www.linkedin.com/in/alzheimeer/" rel="nofollow">Linkedin</a> || <a href="https://twitter.com/alzheimeer" rel="nofollow">Twitter: @alzheimeer</a></p>
-<hr>
+
